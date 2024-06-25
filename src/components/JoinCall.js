@@ -4,13 +4,15 @@ import { joinCall } from '../utils/callManager';
 
 const JoinCall = ({ setToken }) => {
   const [inputToken, setInputToken] = useState('');
+  const [joinError, setJoinError] = useState('');
 
   const handleJoinCall = () => {
-    if (joinCall(inputToken)) {
+    const isValid = joinCall(inputToken);
+    if (isValid) {
       setToken(inputToken);
-      alert('Te has unido a la llamada');
+      setJoinError('');
     } else {
-        alert('Token vacío o inválido. La llamada ha finalizado o el token no es válido.');
+      setJoinError('Token vacío o inválido. La llamada ha finalizado o el token no es válido.');
     }
   };
 
@@ -23,6 +25,8 @@ const JoinCall = ({ setToken }) => {
         variant="outlined"
         fullWidth
         margin="normal"
+        error={joinError !== ''}
+        helperText={joinError}
       />
       <Button onClick={handleJoinCall} variant="contained" color="secondary" fullWidth>
         Unirse a la Llamada

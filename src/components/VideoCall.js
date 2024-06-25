@@ -2,40 +2,45 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button, Card, CardContent, CardHeader, Grid, IconButton, Typography } from '@mui/material';
 import { Mic, MicOff, Videocam, VideocamOff, ContentCopy } from '@mui/icons-material';
 
-const VideoCall = ({ token }) => {
+const VideoCall = ({ location }) => {
   const [callDuration, setCallDuration] = useState(0);
-  const [location, setLocation] = useState('Obteniendo ubicación...');
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
+  const [token, setToken] = useState('');
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    const generateToken = () => {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let token = '';
+      for (let i = 0; i < 9; i++) {
+        token += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return token;
+    };
+
+    const startCall = () => {
+      const query = new URLSearchParams(location.search);
+      const urlToken = query.get('token');
+      const newToken = urlToken || generateToken();
+      setToken(newToken);
+      navigator.clipboard.writeText(newToken).then(() => {
+        console.log('Token copiado al portapapeles:', newToken);
+      });
+    };
+
+    startCall();
+
+    navigator.mediaDevices.getUserMedia({ video: { width: { min: 500, ideal: 1280 }, height: { min: 500, ideal: 720 } }, audio: true })
       .then(stream => {
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
+        videoRef.current.style.transform = 'rotateY(180deg)'; // Ajuste de orientación si es necesario
       })
       .catch(error => {
         console.error('Error accessing media devices.', error);
       });
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(position => {
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
-          .then(response => response.json())
-          .then(data => {
-            setLocation(`${data.address.city}, ${data.address.country}`);
-          })
-          .catch(error => {
-            console.error('Error fetching location data', error);
-          });
-      }, error => {
-        console.error('Error getting location', error);
-      });
-    } else {
-      console.error('Geolocation is not supported by this browser.');
-    }
 
     const timer = setInterval(() => {
       setCallDuration(prev => prev + 1);
@@ -43,30 +48,30 @@ const VideoCall = ({ token }) => {
 
     return () => {
       clearInterval(timer);
-      streamRef.current.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
     };
-  }, []);
+  }, [location.search]);
 
   const toggleMic = () => {
-    const audioTrack = streamRef.current.getAudioTracks()[0];
-    audioTrack.enabled = !audioTrack.enabled;
-    setIsMicOn(audioTrack.enabled);
+    const audioTrack = streamRef.current?.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsMicOn(audioTrack.enabled);
+    }
   };
 
   const toggleCamera = () => {
-    const videoTrack = streamRef.current.getVideoTracks()[0];
-    videoTrack.enabled = !videoTrack.enabled;
-    setIsCameraOn(videoTrack.enabled);
+    const videoTrack = streamRef.current?.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.enabled = !videoTrack.enabled;
+      setIsCameraOn(videoTrack.enabled);
+    }
   };
 
   const handleEndCall = () => {
     window.location.reload();
-  };
-
-  const copyToken = () => {
-    navigator.clipboard.writeText(token).then(() => {
-      alert('Token copiado al portapapeles');
-    });
   };
 
   return (
@@ -80,7 +85,7 @@ const VideoCall = ({ token }) => {
           <Grid item xs={6}>
             <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center' }}>
               {token}
-              <IconButton onClick={copyToken} sx={{ ml: 1 }}>
+              <IconButton onClick={() => navigator.clipboard.writeText(token).then(() => alert('Token copiado al portapapeles'))} sx={{ ml: 1 }}>
                 <ContentCopy />
               </IconButton>
             </Typography>
@@ -98,7 +103,7 @@ const VideoCall = ({ token }) => {
             <Typography variant="body1">{location}</Typography>
           </Grid>
           <Grid item xs={12} sx={{ textAlign: 'center' }}>
-            <video ref={videoRef} autoPlay playsInline width="320" height="240" style={{ border: '1px solid #ccc' }}></video>
+            <video ref={videoRef} autoPlay playsInline width="100%" height="auto" style={{ border: '1px solid #ccc', transform: 'rotateY(180deg)' }}></video>
           </Grid>
           <Grid item xs={12} sx={{ textAlign: 'center' }}>
             <IconButton onClick={toggleMic} color={isMicOn ? 'primary' : 'error'}>
