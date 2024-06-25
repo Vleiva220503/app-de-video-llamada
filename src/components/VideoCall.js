@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader, Grid, IconButton, Typography } from '@mui/material';
 import { Mic, MicOff, Videocam, VideocamOff, ContentCopy } from '@mui/icons-material';
 
@@ -7,8 +7,8 @@ const VideoCall = ({ location }) => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [token, setToken] = useState('');
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
+  const videoRef = React.useRef(null);
+  const streamRef = React.useRef(null);
 
   useEffect(() => {
     const generateToken = () => {
@@ -21,9 +21,7 @@ const VideoCall = ({ location }) => {
     };
 
     const startCall = () => {
-      const query = new URLSearchParams(location.search);
-      const urlToken = query.get('token');
-      const newToken = urlToken || generateToken();
+      const newToken = generateToken();
       setToken(newToken);
       navigator.clipboard.writeText(newToken).then(() => {
         console.log('Token copiado al portapapeles:', newToken);
@@ -52,7 +50,7 @@ const VideoCall = ({ location }) => {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, [location.search]);
+  }, []);
 
   const toggleMic = () => {
     const audioTrack = streamRef.current?.getAudioTracks()[0];
