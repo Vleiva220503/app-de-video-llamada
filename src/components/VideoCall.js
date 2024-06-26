@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader, Grid, IconButton, Typography } from '@mui/material';
 import { Mic, MicOff, Videocam, VideocamOff, ContentCopy } from '@mui/icons-material';
+import { createCall, endCall } from './callManager';
 
 const VideoCall = ({ location }) => {
   const [callDuration, setCallDuration] = useState(0);
@@ -11,24 +12,11 @@ const VideoCall = ({ location }) => {
   const streamRef = React.useRef(null);
 
   useEffect(() => {
-    const generateToken = () => {
-      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let token = '';
-      for (let i = 0; i < 9; i++) {
-        token += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-      return token;
-    };
-
-    const startCall = () => {
-      const newToken = generateToken();
-      setToken(newToken);
-      navigator.clipboard.writeText(newToken).then(() => {
-        console.log('Token copiado al portapapeles:', newToken);
-      });
-    };
-
-    startCall();
+    const newToken = createCall();
+    setToken(newToken);
+    navigator.clipboard.writeText(newToken).then(() => {
+      console.log('Token copiado al portapapeles:', newToken);
+    });
 
     navigator.mediaDevices.getUserMedia({ video: { width: { min: 500, ideal: 1280 }, height: { min: 500, ideal: 720 } }, audio: true })
       .then(stream => {
@@ -69,6 +57,7 @@ const VideoCall = ({ location }) => {
   };
 
   const handleEndCall = () => {
+    endCall();
     window.location.reload();
   };
 
