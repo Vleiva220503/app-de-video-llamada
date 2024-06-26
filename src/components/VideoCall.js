@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader, Grid, IconButton, Typography } from '@mui/material';
 import { Mic, MicOff, Videocam, VideocamOff, ContentCopy } from '@mui/icons-material';
-import { createCall, endCall } from './callManager';
+import { createCall, endCall } from '../utils/callManager';
 
 const VideoCall = ({ location }) => {
   const [callDuration, setCallDuration] = useState(0);
