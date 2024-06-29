@@ -1,35 +1,32 @@
 import React, { useState } from 'react';
 import { Button, TextField, Box } from '@mui/material';
-import { joinCall } from '../utils/callManager';
+import { createToken } from '../api/dailyApi';
+import { useDaily } from '../context/DailyContext';
 
-const JoinCall = ({ setToken }) => {
-  const [inputToken, setInputToken] = useState('');
-  const [joinError, setJoinError] = useState('');
+const JoinCall = () => {
+  const [roomName, setRoomName] = useState('');
+  const { setRoomUrl, setToken, setShowButtons, setTokenActive } = useDaily();
 
-  const handleJoinCall = () => {
-    const isValid = joinCall(inputToken);
-    if (isValid) {
-      setToken(inputToken);
-      setJoinError('');
-    } else {
-      setJoinError('Token vacío o inválido. La llamada ha finalizado o el token no es válido.');
-    }
+  const handleJoin = async () => {
+    const token = await createToken(roomName);
+    setRoomUrl(`https://yourdomain.daily.co/${roomName}?t=${token}`);
+    setToken(token);
+    setShowButtons(false);
+    setTokenActive(true);
   };
 
   return (
-    <Box>
+    <Box mb={2} width="100%">
       <TextField
-        value={inputToken}
-        onChange={(e) => setInputToken(e.target.value)}
-        label="Ingresa el token"
-        variant="outlined"
+        label="Room Name"
+        value={roomName}
+        onChange={(e) => setRoomName(e.target.value)}
         fullWidth
+        variant="outlined"
         margin="normal"
-        error={joinError !== ''}
-        helperText={joinError}
       />
-      <Button onClick={handleJoinCall} variant="contained" color="secondary" fullWidth>
-        Unirse a la Llamada
+      <Button variant="contained" color="secondary" onClick={handleJoin} fullWidth>
+        Join Call
       </Button>
     </Box>
   );
